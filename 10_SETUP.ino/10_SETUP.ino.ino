@@ -69,8 +69,10 @@ void printGPS(){
 
 void printGPS(Print &out) {
 
-  out.print(F("Lat: ")); printFixedPoint(out, lat, 10000000L);
-  out.print(F("Lon: ")); printFixedPoint(out, lon, 10000000L);
+  out.print(F("Lat: "));
+  printFixedPoint(out, lat, 10000000L);
+  out.print(F("Lon: ")); 
+  printFixedPoint(out, lon, 10000000L);
 }
 /*
 end GPS init and functions
@@ -82,16 +84,16 @@ void printFixedPoint(int32_t v, long fixedPoint){
   Serial.print(v / fixedPoint);
   Serial.print('.');
   int32_t frac = v %  fixedPoint;
-  for (int32_t p =  fixedPoint; p > 1 && frac < p; p /= 10){
-    Serial.print(frac);
-  }
+  for (int32_t p =  fixedPoint; p > 1 && frac < p; p /= 10) Serial.print('0'); 
+  Serial.print(frac);
+
 }
-void printFixedPoint(Print &out, int32_t v, long scale) {
+void printFixedPoint(Print &out, int32_t v, long fixedPoint) {
   if (v < 0) { out.print('-'); v = -v; }
-  out.print(v / scale);
+  out.print(v / fixedPoint);
   out.print('.');
-  int32_t frac = v % scale;
-  for (int32_t p = scale / 10; p > 1 && frac < p; p /= 10) out.print('0');  // leading zeros
+  int32_t frac = v % fixedPoint;
+  for (int32_t p = fixedPoint / 10; p > 1 && frac < p; p /= 10) out.print('0'); 
   out.println(frac);
 }
 /*
@@ -124,8 +126,10 @@ void printTHS(){
 }
 
 void printTHS(Print &out) {
-  out.print(F("Humidity: ")); out.println(humidity, 1);
-  out.print(F("Temp: "));     out.println(temp, 1);
+  out.print(F("Humidity: ")); 
+  out.println(humidity, 1);
+  out.print(F("Temp: "));    
+  out.println(temp, 1);
 }
 /*
 end Temp_Humidity_sensor init and functions
@@ -183,7 +187,7 @@ void printLux(Print &out) {
 end Lux_sensor init and functions
 */
 
-
+/* display init and functions*/
 bool initDisplay() {
   Display = new Adafruit_SH1107(64, 128, &Wire);
 
@@ -208,7 +212,7 @@ void refreshDisplay() {
   yield();
   Display->display();
 }
-
+/*end display init and functions*/
 void setup() {
   Serial.begin(115200);
 
