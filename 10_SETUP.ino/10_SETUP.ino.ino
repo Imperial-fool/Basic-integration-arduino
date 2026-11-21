@@ -119,10 +119,10 @@ bool readTHS(){
   return true;
 }
 void printTHS(){
-    Serial.print(F("Huminity: "));
-    Serial.print(humidity, 2);
-    Serial.println(F("Temperature: "));
-    Serial.print(temp, 2);
+  Serial.print(F("Huminity: "));
+  Serial.println(humidity, 2);
+  Serial.print(F("Temperature: "));
+  Serial.println(temp, 2);
 }
 
 void printTHS(Print &out) {
@@ -163,10 +163,10 @@ bool readLux(){
   */
   uint16_t ir = full >> 16; //we shift over the upper half and assign it to ir
   uint16_t visible = full & 0xFFFF; //we 'and' the full with 0xFFFF which zeros out the top assigning the lower channel to visible 
-   if (full == 0xFFFF || ir == 0xFFFF) {
+   if (visible == 0xFFFF || ir == 0xFFFF) {
     return false;
   }
-  float lux = Lux_sensor->calculateLux(full, ir);
+  float lux = Lux_sensor->calculateLux(visible, ir);
   if (lux < 0) {
     return false;
   }
