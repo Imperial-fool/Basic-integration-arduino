@@ -65,13 +65,11 @@ bool readGPS() {
         lat = GPS->latitude_fixed;   
         lon = GPS->longitude_fixed;
         return true;
+      }else{
+        Serial.println("no fix");
+        return false;
       }
     }
-
-  if(gotNMEAResponse) Serial.println("receiving data but no fix");
-  else Serial.println("lost connection to gps");
-
-
   return false; 
 }
 
@@ -254,12 +252,22 @@ void setup() {
   else { Serial.println(F("TSL2591 failed")); failed = true; }
 
   if (failed) halt("One or more modules failed");
-
-  Wire.setClock(400000);
+  tGPS = millis();
+  while(!GPS->fix){
+    Display->println("Waiting on GPS fix.");
+    Display->print(">time waiting: ");
+    Display->println((millis() - tGPS)/1000);
+    Display->display();
+    delay(200);
+    Display->clearDisplay();
+  }
+  tGPS = 0;
 }
 
 void loop() {
   bool THS_OK, LUX_OK, GPS_OK = true;
+
+
   if (due(tGPS, 100))   GPS_OK = readGPS();                
   if (due(tTHS, 1000))  THS_OK = readTHS();
   if (due(tLux, 1000))  LUX_OK = readLux(); 
