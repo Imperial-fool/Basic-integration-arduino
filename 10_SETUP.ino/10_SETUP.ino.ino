@@ -44,33 +44,35 @@ bool initGPS() {
 }
 
 bool readGPS() {
-  bool gotNMEAResponse = false;
 
-  GPS->read();
-    if (GPS->newNMEAreceived()) {
-      gotNMEAResponse = true;
-      char *s = GPS->lastNMEA(); 
+  for (int i = 0; i < 32; i++) {
+    char c = GPS->read();
+    if (c == 0 || GPS->newNMEAreceived()) break;
+  }
+  if (!GPS->newNMEAreceived()) return true;
 
-      Serial.print(s);
-      bool ok = GPS->parse(s);
-      Serial.print(F("parse ")); Serial.print(ok ? F("ok") : F("FAIL"));
-      Serial.print(F(" fix=")); Serial.print(GPS->fix);
-      Serial.print(F(" q="));   Serial.print(GPS->fixquality);
-      Serial.print(F(" sats=")); Serial.println(GPS->satellites);
-      if (!ok) {
-        Serial.print("Failed to parse.");
-        return false;
-      }
-      if(GPS->fix){  
-        lat = GPS->latitude_fixed;   
-        lon = GPS->longitude_fixed;
-        return true;
-      }else{
-        Serial.println("no fix");
-        return false;
-      }
-    }
-  return false; 
+  char *s = GPS->lastNMEA(); 
+
+  Serial.println(s);
+  bool ok = GPS->parse(s);
+  if (!ok) {
+    Serial.print("Failed to parse.");
+    return false;
+  }
+
+  Serial.print(F("parse ")); Serial.print(ok ? F("ok") : F("FAIL"));
+  Serial.print(F(" fix=")); Serial.print(GPS->fix);
+  Serial.print(F(" q="));   Serial.print(GPS->fixquality);
+  Serial.print(F(" sats=")); Serial.println(GPS->satellites);
+ 
+  if(GPS->fix){  
+    lat = GPS->latitude_fixed;   
+    lon = GPS->longitude_fixed;
+    return true;
+  }else{
+    Serial.println("no fix");
+    return false;
+  } 
 }
 
 void printGPS(){
@@ -252,23 +254,14 @@ void setup() {
   else { Serial.println(F("TSL2591 failed")); failed = true; }
 
   if (failed) halt("One or more modules failed");
-  tGPS = millis();
-  while(!GPS->fix){
-    Display->println("Waiting on GPS fix.");
-    Display->print(">time waiting: ");
-    Display->println((millis() - tGPS)/1000);
-    Display->display();
-    delay(200);
-    Display->clearDisplay();
-  }
-  tGPS = 0;
 }
 
 void loop() {
   bool THS_OK, LUX_OK, GPS_OK = true;
 
 
-  if (due(tGPS, 100))   GPS_OK = readGPS();                
+  GPS_OK = readGPS();
+
   if (due(tTHS, 1000))  THS_OK = readTHS();
   if (due(tLux, 1000))  LUX_OK = readLux(); 
 
@@ -280,8 +273,6 @@ void loop() {
     Serial.print(F(" GPS:")); Serial.println(GPS_OK ? F("ok") : GPS->fix ? F("fix") : F("nofix"));
   }
 
-  refreshDisplay();
-  delay(500);
 }
 
 
