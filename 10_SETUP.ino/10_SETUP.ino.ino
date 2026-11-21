@@ -34,7 +34,9 @@ bool initGPS() {
   }
   return false;
 }
-
+bool readGPS(){
+  return readGPSLocation(3000);
+}
 bool readGPSLocation(uint32_t timeoutMs) {
   uint32_t start = millis();
   bool gotNMEAResponse = false;
@@ -241,6 +243,11 @@ void setup() {
 }
 
 void loop() {
+  bool THS_OK, LUX_OK, GPS_OK = true;
+  THS_OK = readTHS();
+  LUX_OK = readLux();
+  GPS_OK = readGPS();
+  if(!THS_OK || !LUX_OK || !GPS_OK) Serial.println(F("Failed to read one or more modules"));
   refreshDisplay();
   delay(500);
 }
