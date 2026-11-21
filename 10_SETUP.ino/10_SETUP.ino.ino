@@ -1,12 +1,12 @@
 #include <Adafruit_GPS.h>
 #include <Adafruit_SH110X.h>
-#include <Adafruit_HTU21DF.h>
+#include <Adafruit_HTU31D.h>
 #include <Adafruit_TSL2591.h>
 #include <Adafruit_Sensor.h>
 
 
 Adafruit_GPS *GPS = nullptr;
-Adafruit_HTU21DF *Temp_Humidity_sensor = nullptr;
+Adafruit_HTU31D *Temp_Humidity_sensor = nullptr;
 Adafruit_TSL2591 *Lux_sensor = nullptr;
 Adafruit_SH1107 *Display = nullptr;
 
@@ -100,12 +100,14 @@ void printFixedPoint(Print &out, int32_t v, long fixedPoint) {
 Temp_Humidity_sensor init and functions
 */
 bool initTHsensor() {
-  Temp_Humidity_sensor = new Adafruit_HTU21DF();
-  return Temp_Humidity_sensor->begin(&Wire);
+  Temp_Humidity_sensor = new Adafruit_HTU31D();
+  return Temp_Humidity_sensor->begin();
 }
 bool readTHS(){
-  float h = Temp_Humidity_sensor->readHumidity();
-  float t = Temp_Humidity_sensor->readTemperature();
+  sensors_event_t hum, tem;
+  Temp_Humidity_sensor->getEvent(&hum, &tem);
+  float h = hum.relative_humidity;
+  float t = tem.temperature;
 
   if (isnan(h) || isnan(t)) {
     return false;
@@ -127,9 +129,9 @@ void printTHS(){
 
 void printTHS(Print &out) {
   out.print(F("Humidity: ")); 
-  out.println(humidity, 1);
+  out.println(humidity, 2);
   out.print(F("Temp: "));    
-  out.println(temp, 1);
+  out.println(temp, 2);
 }
 /*
 end Temp_Humidity_sensor init and functions
