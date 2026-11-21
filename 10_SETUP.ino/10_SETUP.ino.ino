@@ -35,7 +35,7 @@ bool initGPS() {
   return false;
 }
 bool readGPS(){
-  return readGPSLocation(3000);
+  return readGPSLocation(500);
 }
 bool readGPSLocation(uint32_t timeoutMs) {
   uint32_t start = millis();
@@ -78,13 +78,13 @@ void printGPS(Print &out) {
 end GPS init and functions
 */
 
-//M0 doesn't support floating point math, ideally we do everything with ints except for display
+//M0 doesn't support floating point math in hardware, ideally we do everything with ints except for display
 void printFixedPoint(int32_t v, long fixedPoint){
   if(v < 0){ Serial.print('-'); v = -v;}
   Serial.print(v / fixedPoint);
   Serial.print('.');
   int32_t frac = v %  fixedPoint;
-  for (int32_t p =  fixedPoint; p > 1 && frac < p; p /= 10) Serial.print('0'); 
+  for (int32_t p =  fixedPoint / 10; p > 1 && frac < p; p /= 10) Serial.print('0'); 
   Serial.print(frac);
 
 }
@@ -149,12 +149,6 @@ bool initLux() {
 }
 
 bool readLux(){
-  sensors_event_t event;
-  
-  if(!Lux_sensor->getEvent(&event)){
-    Serial.println("failed to update");
-    return false;
-  }
 
   uint32_t full  = Lux_sensor->getFullLuminosity(); //full luminosity returns a 32 bit uint with half representing ir and the other representing visible light
   /*
@@ -170,7 +164,7 @@ bool readLux(){
   if (lux < 0) {
     return false;
   }
-  illuminance = (lux < 0) ? -1 : (int32_t)lroundf(lux); //calculate and return an int that is between 0 and 88000 representing the rough range of the sensor
+  illuminance = (int32_t)lroundf(lux); //calculate and return an int that is between 0 and 88000 representing the rough range of the sensor
 
   return true;
 }
@@ -215,6 +209,7 @@ void refreshDisplay() {
 /*end display init and functions*/
 void setup() {
   Serial.begin(115200);
+  while (!Serial && millis() < 3000) {};
 
   if (!initDisplay()) halt("Display init failed");
 
