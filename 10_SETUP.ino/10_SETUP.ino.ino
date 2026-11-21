@@ -18,9 +18,17 @@ int32_t lat,lon = 0;
 
 int32_t illuminance = 0;
 
+uint32_t tGPS = 0, tTHS = 0, tLux = 0, tDisp = 0, tStatus = 0;
+
+
 void halt(const char *msg) {
   Serial.println(msg);
   while (true) delay(10);
+}
+bool due(uint32_t &last, uint32_t period) {
+  uint32_t now = millis();
+  if (now - last >= period) { last = now; return true; }
+  return false;
 }
 /*
 GPS init and functions
@@ -34,25 +42,32 @@ bool initGPS() {
   }
   return false;
 }
-bool readGPS(){
-  return readGPSLocation(500);
-}
-bool readGPSLocation(uint32_t timeoutMs) {
-  uint32_t start = millis();
+
+bool readGPS() {
   bool gotNMEAResponse = false;
 
-  while (millis() - start < timeoutMs) {
-    GPS->read();
+  GPS->read();
     if (GPS->newNMEAreceived()) {
       gotNMEAResponse = true;
-      if (!GPS->parse(GPS->lastNMEA())) continue;  
-      if (GPS->fix) {
+      char *s = GPS->lastNMEA(); 
+
+      Serial.print(s);
+      bool ok = GPS->parse(s);
+      Serial.print(F("parse ")); Serial.print(ok ? F("ok") : F("FAIL"));
+      Serial.print(F(" fix=")); Serial.print(GPS->fix);
+      Serial.print(F(" q="));   Serial.print(GPS->fixquality);
+      Serial.print(F(" sats=")); Serial.println(GPS->satellites);
+      if (!ok) {
+        Serial.print("Failed to parse.");
+        return false;
+      }
+      if(GPS->fix){  
         lat = GPS->latitude_fixed;   
         lon = GPS->longitude_fixed;
         return true;
       }
     }
-  }
+
   if(gotNMEAResponse) Serial.println("receiving data but no fix");
   else Serial.println("lost connection to gps");
 
@@ -219,7 +234,7 @@ void setup() {
 
   if (initGPS()) {
     Serial.println(F("GPS ok"));
-    if(readGPSLocation(3000)){
+    if(readGPS()){
       printGPS();
     }
 
@@ -227,10 +242,10 @@ void setup() {
   else { Serial.println(F("GPS failed")); failed = true; }
 
   if (initTHsensor()) {
-    Serial.println(F("HTU21D ok"));
+    Serial.println(F("HTU31D ok"));
     if(readTHS()) printTHS();
   }
-  else { Serial.println(F("HTU21D failed")); failed = true; }
+  else { Serial.println(F("HTU31D failed")); failed = true; }
 
   if (initLux()) {
     Serial.println(F("Lux ok"));
@@ -240,15 +255,23 @@ void setup() {
 
   if (failed) halt("One or more modules failed");
 
-
+  Wire.setClock(400000);
 }
 
 void loop() {
   bool THS_OK, LUX_OK, GPS_OK = true;
-  THS_OK = readTHS();
-  LUX_OK = readLux();
-  GPS_OK = readGPS();
-  if(!THS_OK || !LUX_OK || !GPS_OK) Serial.println(F("Failed to read one or more modules"));
+  if (due(tGPS, 100))   GPS_OK = readGPS();                
+  if (due(tTHS, 1000))  THS_OK = readTHS();
+  if (due(tLux, 1000))  LUX_OK = readLux(); 
+
+  if (due(tDisp, 500))  refreshDisplay();
+
+  if (due(tStatus, 1000)) {
+    Serial.print(F("THS:")); Serial.print(THS_OK ? F("ok") : F("FAIL"));
+    Serial.print(F(" LUX:")); Serial.print(LUX_OK ? F("ok") : F("FAIL"));
+    Serial.print(F(" GPS:")); Serial.println(GPS_OK ? F("ok") : GPS->fix ? F("fix") : F("nofix"));
+  }
+
   refreshDisplay();
   delay(500);
 }
