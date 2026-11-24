@@ -129,9 +129,6 @@ bool readTHS(){
   if (isnan(h) || isnan(t)) {
     return false;
   }
-  if (t < -40.0f || t > 125.0f || h < 0.0f || h > 100.0f) {
-    return false;
-  }
   humidity = h;
   temp = t;
 
@@ -181,7 +178,8 @@ bool readLux(){
   }
   float lux = Lux_sensor->calculateLux(visible, ir);
   if (lux < 0) {
-    return false;
+    illuminance = 0;
+    return true;
   }
   illuminance = (int32_t)lroundf(lux); //calculate and return an int that is between 0 and 88000 representing the rough range of the sensor
 
