@@ -51,7 +51,7 @@ bool readGPS() {
     char c = GPS->read();
     if (c == 0 || GPS->newNMEAreceived()) break;
   }
-  if (!GPS->newNMEAreceived()) return true;
+  if (!GPS->newNMEAreceived()) return GPS->fix;
 
   char *s = GPS->lastNMEA(); 
 
