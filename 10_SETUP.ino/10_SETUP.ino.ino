@@ -13,6 +13,8 @@ Adafruit_SH1107 *Display = nullptr;
 /*
 Global Vars
 */
+bool THS_OK, LUX_OK, GPS_OK = true;
+
 float humidity, temp = 0.0f;
 int32_t lat,lon = 0;
 
@@ -257,13 +259,10 @@ void setup() {
 }
 
 void loop() {
-  bool THS_OK, LUX_OK, GPS_OK = true;
-
 
   GPS_OK = readGPS();
-
-  if (due(tTHS, 1000))  THS_OK = readTHS();
-  if (due(tLux, 1000))  LUX_OK = readLux(); 
+  THS_OK = readTHS();
+  LUX_OK = readLux(); 
 
   if (due(tDisp, 500))  refreshDisplay();
 
@@ -271,6 +270,7 @@ void loop() {
     Serial.print(F("THS:")); Serial.print(THS_OK ? F("ok") : F("FAIL"));
     Serial.print(F(" LUX:")); Serial.print(LUX_OK ? F("ok") : F("FAIL"));
     Serial.print(F(" GPS:")); Serial.println(GPS_OK ? F("ok") : GPS->fix ? F("fix") : F("nofix"));
+    THS_OK, LUX_OK, GPS_OK = false;
   }
 
 }
