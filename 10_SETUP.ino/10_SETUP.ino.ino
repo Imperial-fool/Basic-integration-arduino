@@ -3,7 +3,7 @@
 #include <Adafruit_HTU31D.h>
 #include <Adafruit_TSL2591.h>
 #include <Adafruit_Sensor.h>
-
+#include "toronto_geo.h"
 
 Adafruit_GPS *GPS = nullptr;
 Adafruit_HTU31D *Temp_Humidity_sensor = nullptr;
@@ -31,6 +31,17 @@ bool due(uint32_t &last, uint32_t period) {
   uint32_t now = millis();
   if (now - last >= period) { last = now; return true; }
   return false;
+}
+
+void printLocation(Print &out) { 
+  int n = tgeo_find(TGEO_NEIGHBOURHOOD, lat, lon);
+  int p = tgeo_find(TGEO_PARK, lat, lon);
+  if(n > 0){
+  out.print("Neighbourhood: "); out.print(tgeo_name(n));
+  }
+  if(p > 0){
+  out.print("Park: "); out.print(tgeo_name(p));
+  }
 }
 /*
 GPS init and functions
@@ -220,6 +231,7 @@ void refreshDisplay() {
   printGPS(*Display);
   printTHS(*Display);
   printLux(*Display);
+  printLocation(*Display);
   yield();
   Display->display();
 }
